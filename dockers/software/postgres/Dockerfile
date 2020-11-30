@@ -9,7 +9,7 @@ ENV TZ Asia/Shanghai
 COPY .pgpass /root/.pgpass
 COPY init.sh /docker-entrypoint-initdb.d/
 COPY init.sql /data/
-COPY hj_platform-ddl.sql /data/
+COPY yj_platform-ddl.sql /data/
 
 RUN chmod 0600 /root/.pgpass
 #&& apt-get -y update && \

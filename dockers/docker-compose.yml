@@ -1,19 +1,31 @@
 version: '3'
 
 services:
-  hj-consul:
+  yj-consul-server:
     image: consul
-    container_name: hj-consul
+    container_name: yj-consul-server
     restart: on-failure
     ports:
-      - 8500:8500
+      - 18500:18500
       - 8600:8600/udp
-    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    command: agent -server -ui -node=server -bootstrap-expect=1 -client=0.0.0.0 -http-port=18500
     networks:
-      - hjnet
+      - yjnet
 
-  hj-postgres:
-    container_name: hj-postgres
+  yj-consul-client:
+    image: consul
+    container_name: yj-consul-client
+    restart: on-failure
+    depends_on:
+      - yj-consul-server
+    ports:
+      - 8500:8500
+    command: agent -node=client -join=yj-consul-server -client=0.0.0.0
+    networks:
+      - yjnet
+
+  yj-postgres:
+    container_name: yj-postgres
     build:
       context: ./software/postgres
       dockerfile: Dockerfile
@@ -21,19 +33,19 @@ services:
     ports:
       - 5432:5432
     environment:
-      POSTGRES_PASSWORD: HJ.2020
+      POSTGRES_PASSWORD: YJ.2020
     volumes:
       - ./var/postgresql:/var/lib/postgresql
     networks:
-      - hjnet
+      - yjnet
 
-  hj-elasticsearch:
+  yj-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
-    container_name: hj-elasticsearch
+    container_name: yj-elasticsearch
     restart: on-failure
     user: elasticsearch
     environment:
-      - cluster.name=hj-elasticsearch
+      - cluster.name=yj-elasticsearch
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -48,41 +60,41 @@ services:
       - 9200:9200
       - 9300:9300
     networks:
-      - hjnet
+      - yjnet
 
-  hj-kibana:
+  yj-kibana:
     image: docker.elastic.co/kibana/kibana:7.10.0
-    container_name: hj-kibana
+    container_name: yj-kibana
     depends_on:
-      - hj-elasticsearch
+      - yj-elasticsearch
     restart: on-failure
     environment:
-      SERVER_NAME: hj-kibana
-      ELASTICSEARCH_HOSTS: http://hj-elasticsearch:9200
+      SERVER_NAME: yj-kibana
+      ELASTICSEARCH_HOSTS: http://yj-elasticsearch:9200
     #    volumes:
     #      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
       - 5601:5601
     networks:
-      - hjnet
+      - yjnet
 
-  hj-apm-server:
+  yj-apm-server:
     image: docker.elastic.co/apm/apm-server:7.10.0
-    container_name: hj-apm-server
+    container_name: yj-apm-server
     depends_on:
-      - hj-elasticsearch
+      - yj-elasticsearch
     restart: on-failure
     user: apm-server
 #    environment:
-#      - output.elasticsearch.hosts="hj-elasticsearch:9200"
+#      - output.elasticsearch.hosts="yj-elasticsearch:9200"
     volumes:
       - ./software/apm-server/apm-server.docker.yml:/usr/share/apm-server/apm-server.yml:ro
     networks:
-      - hjnet
+      - yjnet
 
-  hj-pulsar:
+  yj-pulsar:
     image: apachepulsar/pulsar:2.6.2
-    container_name: hj-pulsar
+    container_name: yj-pulsar
     restart: on-failure
     command: "bin/pulsar standalone"
     volumes:
@@ -92,22 +104,22 @@ services:
       - 6650:6650
       - 8080:8080
     networks:
-      - hjnet
+      - yjnet
 
-#  hj-zookeeper:
-#    container_name: hj-zookeeper
+#  yj-zookeeper:
+#    container_name: yj-zookeeper
 #    image: zookeeper:3.5
 #    restart: on-failure
 #    ports:
 #      - "2181:2181"
 #    networks:
-#      - hjnet
+#      - yjnet
 
-#  hj-kafka:
-#    container_name: hj-kafka
+#  yj-kafka:
+#    container_name: yj-kafka
 #    image: wurstmeister/kafka:2.12-2.5.1
 #    depends_on:
-#      - hj-zookeeper
+#      - yj-zookeeper
 #    restart: on-failure
 #    ports:
 #      - "9092:9092"
@@ -116,12 +128,12 @@ services:
 #       #若需要在其它物理主机上访问此Kafka服务，此处应设置为物理主机实际IP地址
 #      KAFKA_ADVERTISED_HOST_NAME: "localhost"
 #      #KAFKA_CREATE_TOPICS: "test:1:1"
-#      KAFKA_ZOOKEEPER_CONNECT: hj-zookeeper:2181
+#      KAFKA_ZOOKEEPER_CONNECT: yj-zookeeper:2181
 #      JMX_PORT: 9988
 #    volumes:
 #      - /var/run/docker.sock:/var/run/docker.sock
 #    networks:
-#      - hjnet
+#      - yjnet
 
 networks:
-  hjnet:
+  yjnet:

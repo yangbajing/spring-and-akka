@@ -5,7 +5,7 @@ apm-server:
 
 output:
   elasticsearch:
-    hosts: hj-elasticsearch:9200
+    hosts: yj-elasticsearch:9200
 
 queue.mem.events: 4096
 
