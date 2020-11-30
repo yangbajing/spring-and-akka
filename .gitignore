@@ -108,5 +108,5 @@ node_modules/
 /scripts/nacos-standalone-logs/
 /debug-logs/
 *.pid
-scripts/var/
+/dockers/var/
 

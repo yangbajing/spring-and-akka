@@ -1,6 +1,16 @@
 version: '3'
 
 services:
+  hj-consul:
+    image: consul
+    container_name: hj-consul
+    restart: on-failure
+    ports:
+      - 8500:8500
+      - 8600:8600/udp
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    networks:
+      - hjnet
 
   hj-postgres:
     container_name: hj-postgres
