@@ -1,0 +1,6 @@
+### Get user by id.
+GET http://{{host}}:8090/api/user/get/1
+Accept: application/json
+Authorization: Bearer eyJraWQiOiJlYy1rZXkiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYy1jbGllbnQiLCJzY29wZSI6Im1lc3NhZ2UucmVhZCBhcGkucmVhZCIsImlzcyI6Imh0dHBzOlwvXC9ha2thLXNlY3VyaXR5LmhlbGxvc2NhbGEuY29tIiwiZXhwIjoxNjA3NDE3MzY4LCJpYXQiOjE2MDY4MTIyNjgsImp0aSI6ImVjLWtleSJ9.EUyVwErEcfdKGpeny26nPKW7uk9O1ewAlttQO36FlX2qoaa_bSdpLqfrzaZXa7so_nce3tXiaffgbesXyJ0r3w
+
+###

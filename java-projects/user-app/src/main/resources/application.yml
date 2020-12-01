@@ -1,0 +1,14 @@
+server:
+  port: 8190
+grpc:
+  server:
+    port: 8191
+spring:
+  application:
+    name: user-app
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        prefer-ip-address: on

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package me.yangbajing.user.grpc;
+
+option java_multiple_files = true;
+option java_package = "me.yangbajing.user.grpc";
+option java_outer_classname = "UserProto";
+
+// The request message containing the user's name.
+message QueryUser {
+  int64 id = 1;
+  string username = 2;
+  string phone = 3;
+}
+
+// The response message containing the greetings
+message UserBO {
+  int64 id = 1;
+  string username = 2;
+  string phone = 3;
+  string email = 4;
+  int32 status = 5;
+}
+
+service UserService {
+  rpc GetUser (QueryUser) returns (UserBO) {
+  }
+}

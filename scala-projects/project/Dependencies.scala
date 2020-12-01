@@ -11,6 +11,8 @@ object Dependencies {
   val versionScalaLogging = "3.9.2"
   val versionLogback = "1.2.3"
   val versionAlpnAgent = "2.0.10"
+  val versionAkkaManagement = "1.0.9"
+  val versionAkkaSecurity = "0.1"
 
   val _scalatest = "org.scalatest" %% "scalatest" % versionScalatest
 
@@ -28,6 +30,7 @@ object Dependencies {
       .map(_.exclude("org.scala-lang.modules", "scala-java8-compat").cross(CrossVersion.binary))
 
   val _akkaClusters = Seq(
+    _akkaDiscovery,
     "com.typesafe.akka" %% "akka-cluster-typed" % versionAkka,
     "com.typesafe.akka" %% "akka-cluster-sharding-typed" % versionAkka)
 
@@ -38,6 +41,8 @@ object Dependencies {
       .exclude("com.typesafe.akka", "akka-stream")
       .cross(CrossVersion.binary),
     _alpnAgent)
+
+  val _akkaManagementConsul = "com.lightbend.akka.discovery" %% "akka-discovery-consul" % versionAkkaManagement
 
   val _alpakkaCsv =
     ("com.lightbend.akka" %% "akka-stream-alpakka-csv" % versionAlpakka)
@@ -59,6 +64,9 @@ object Dependencies {
       .excludeAll(ExclusionRule("com.typesafe.akka"))
       .cross(CrossVersion.binary)
       .excludeAll(ExclusionRule("org.springframework"))
+
+  val akkaSecurityOauthCore = "com.helloscala" %% "akka-security-oauth-core" % versionAkkaSecurity
+  val akkaSecurityOauthJose = "com.helloscala" %% "akka-security-oauth-jose" % versionAkkaSecurity
 
   val _cassandras = Seq("com.datastax.oss" % "java-driver-core" % versionCassandra)
 

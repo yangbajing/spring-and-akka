@@ -62,10 +62,11 @@ trait OAuth2Directive {
         if (errors.nonEmpty) {
           reject(errors: _*)
         } else {
+          val scopeOpt = formData.fields.get(OAuth2ParameterNames.SCOPE)
           val authentication = OAuth2AccessTokenAuthentication(
             grantTypeEither.right.get,
             authorization.credentials,
-            formData.fields.get(OAuth2ParameterNames.SCOPE).map(_.split(' ').toSet).getOrElse(Set()),
+            scopeOpt.map(_.split(' ').toSet).getOrElse(Set()),
             formData.fields.toMap)
           provide(authentication)
         }

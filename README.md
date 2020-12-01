@@ -1,21 +1,20 @@
 # Spring and Akka's hybrid microservices project.
 
-## OAuth 2 Integration Sample
-                                                                                                                                                                     
-This sample integrates ~~spring-security-oauth2-client and~~ spring-security-oauth2-resource-server with Akka Authorization Server.                                  
+## Run & Test
 
-### Run the Sample
+### Run the Samples
 
-- Run Authorization Server
+- Run OAuth Authorization Server
     - `cd scala-projects/`
     - Run: -> `sbt "project auth-server-app" run`
-    - **IMPORTANT**: Make sure to modify your `/etc/hosts` file to avoid problems with session cookie overwrites between `spring-security-oauth2-client` and `example
-- ~~oauth2-server-in-memory`. Simply add the entry `127.0.0.1 auth-server`~~
+- Run User Server
+    - `cd java-projects/`
+    - Run: -> `mvn -pl user-app spring-boot:run`
+        - *Perform spring-boot:run before must be perform `mvn -DskipTests compile`*
 - Rune Resource Server
     - `cd java-projects/`
-    - Package: -> `mvn -DskipTest package`
-    - Run: -> `java -jar portal-app/target/portal-app-1.0.0-SNAPSHOT.jar`
-- ~~Run Client -> `sbt "project example-spring-oauth2-client" "runMain sample.OAuth2ClientApplication"`~~
+    - Run: -> `mvn -pl portal-app spring-boot:run`
+        - *Perform spring-boot:run before must be perform `mvn -DskipTests compile`*
 
 ### Beginning test
                                                                                                                                                                                                                                                                
@@ -25,7 +24,7 @@ This sample integrates ~~spring-security-oauth2-client and~~ spring-security-oau
 curl -i -XPOST 'http://localhost:9000/oauth2/token' \                                                                                                                                                                                                          
   -u 'ec-client:secret' \                                                                                                                                                                                                                               
   -H 'Content-Type: application/x-www-form-urlencoded' \                                                                                                                                                                                                       
-  -d 'grant_type=client_credentials&scope=message.read'                                                                                                                                                                                                        
+  -d 'grant_type=client_credentials&scope=message.read%20api.read'                                                                                                                                                                                                        
 ```                                                                                                                                                                                                                                                            
 Example of response:                                                                                                                                                                                                                                           
 ```                                                                                                                                                                                                                                                            
@@ -44,13 +43,44 @@ p2wtH9NeABqpcDswLZHBWgVhof2qMvD-QgKeu5rJHArxnnh_4hRDlUCH9bo6H_UKu5BYtq-E-Kw",
 }
 ```
 
-JWS uses the `ES256` algorithm by default, and you can change it by using parameter such as `algorithm=RS256`. 
+> JWS uses the `ES256` algorithm by default, and you can change it by using parameter such as `algorithm=RS256`. 
+> ```
+> curl -i -XPOST 'http://localhost:9000/oauth2/token' \
+>   -u 'messaging-client:secret' \
+>   -H 'Content-Type: application/x-www-form-urlencoded' \
+>   -d 'grant_type=client_credentials&scope=message.read%20api.read&algorithm=RS256'
+> ```
+
+
+  
+#### Access to `/api/user/get/{id}`
+
 ```
-curl -i -XPOST 'http://localhost:9000/oauth2/token' \
-  -u 'messaging-client:secret' \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=client_credentials&scope=message.read&algorithm=RS256'
+curl -i 'http://localhost:8090/api/user/get/1' \
+  -H 'Authorization: Bearer <access_token>'
 ```
+*Please replace the `<access_token>` punctuation character with the correct `access_token`, which can be found in the previous example.* Example of response:
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 37
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1 ; mode=block
+Referrer-Policy: no-referrer
+
+{
+  "id": "1",
+  "username": "Hello ==> ",
+  "phone": "13845678901",
+  "email": "",
+  "status": 0
+}
+```
+
   
 #### Access to `messages`
 

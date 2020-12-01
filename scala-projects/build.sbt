@@ -23,7 +23,7 @@ lazy val `gateway-app` =
   _project("gateway-app")
     .dependsOn(`gateway-grpc`, `scala-common`)
     .settings(Publishing.noPublish: _*)
-    .settings(libraryDependencies ++= Seq() ++ _akkaClusters)
+    .settings(libraryDependencies ++= Seq(_akkaManagementConsul) ++ _akkaClusters)
 
 lazy val `gateway-grpc` = (project in file("gateway-grpc")).settings(Commons.basicSettings)
 
@@ -32,8 +32,9 @@ lazy val `auth-server-app` =
     .dependsOn(`auth-server-grpc`, `scala-common`)
     .settings(Publishing.noPublish: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.helloscala" %% "akka-security-oauth-core" % "0.1",
-      "com.helloscala" %% "akka-security-oauth-jose" % "0.1"
+      akkaSecurityOauthJose,
+      akkaSecurityOauthCore,
+      _akkaManagementConsul
     ) ++ _akkaClusters)
 
 lazy val `auth-server-grpc` = project in file("auth-server-grpc")

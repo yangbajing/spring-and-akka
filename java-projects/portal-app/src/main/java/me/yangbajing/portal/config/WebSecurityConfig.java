@@ -19,23 +19,25 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2Res
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.reactive.function.client.WebClient;
 
-@EnableWebSecurity
+@EnableWebFluxSecurity
 @Configuration
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig {
     @Bean
-    public JwtDecoder jwtDecoder(OAuth2ResourceServerProperties oAuth2ResourceServerProperties/*, WebClient.Builder webClientBuilder*/) {
+    public ReactiveJwtDecoder jwtDecoder(OAuth2ResourceServerProperties oAuth2ResourceServerProperties, WebClient.Builder webClientBuilder) {
         OAuth2ResourceServerProperties.Jwt properties = oAuth2ResourceServerProperties.getJwt();
-        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder
+        WebClient webClient = webClientBuilder.build();
+        NimbusReactiveJwtDecoder nimbusJwtDecoder = NimbusReactiveJwtDecoder
                 .withJwkSetUri(properties.getJwkSetUri())
-//                .webClient(webClientBuilder.build())
+                .webClient(webClient)
                 .jwsAlgorithm(SignatureAlgorithm.RS256)
                 .jwsAlgorithm(SignatureAlgorithm.ES256)
                 .build();
@@ -46,11 +48,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return nimbusJwtDecoder;
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests(authorize -> authorize.antMatchers("/messages/**").hasAuthority("SCOPE_message.read")
-                .anyRequest()
-                .authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+    @Bean
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+                .authorizeExchange(exchange -> exchange
+                        .pathMatchers("/messages/**").hasAuthority("SCOPE_message.read")
+                        .pathMatchers("/api/**").hasAuthority("SCOPE_api.read")
+                        .pathMatchers("/actuator/**").permitAll()
+                        .anyExchange().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults()))
+                .build();
     }
 }
