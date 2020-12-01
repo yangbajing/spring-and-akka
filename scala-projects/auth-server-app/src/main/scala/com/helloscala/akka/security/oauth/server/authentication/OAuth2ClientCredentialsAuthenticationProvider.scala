@@ -4,24 +4,18 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.AskPattern._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.util.Timeout
-import com.helloscala.akka.security.authentication.Authentication
-import com.helloscala.akka.security.authentication.AuthenticationProvider
+import com.helloscala.akka.security.authentication.{ Authentication, AuthenticationProvider }
 import com.helloscala.akka.security.exception.AkkaSecurityException
 import com.helloscala.akka.security.oauth.constant.OAuth2ParameterNames
-import com.helloscala.akka.security.oauth.core.OAuth2AccessToken
-import com.helloscala.akka.security.oauth.core.TokenType
+import com.helloscala.akka.security.oauth.core.{ OAuth2AccessToken, TokenType }
 import com.helloscala.akka.security.oauth.jose.JoseHeader
 import com.helloscala.akka.security.oauth.jwt.Jwt
-import com.helloscala.akka.security.oauth.server.OAuth2AuthorizationService
-import com.helloscala.akka.security.oauth.server.OAuth2Extension
-import com.helloscala.akka.security.oauth.server.authentication.client.RegisteredClient
-import com.helloscala.akka.security.oauth.server.authentication.client.RegisteredClientRepository
+import com.helloscala.akka.security.oauth.server.{ OAuth2AuthorizationService, OAuth2Extension }
+import com.helloscala.akka.security.oauth.server.authentication.client.{ RegisteredClient, RegisteredClientRepository }
 import com.helloscala.akka.security.oauth.server.jwt.JwtEncoder
-import com.nimbusds.jose.JWSAlgorithm
-import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.{ JWSAlgorithm, JWSHeader }
 import com.nimbusds.jwt.JWTClaimsSet
 
 import scala.concurrent.Future
@@ -36,7 +30,6 @@ trait OAuth2ClientCredentialsAuthenticationProvider extends AuthenticationProvid
 class OAuth2ClientCredentialsAuthenticationProviderImpl(system: ActorSystem[_])
     extends OAuth2ClientCredentialsAuthenticationProvider {
   private val oauth2Extension = OAuth2Extension(system)
-  implicit private val ts = oauth2Extension.system
   implicit private val ec = oauth2Extension.system.executionContext
   implicit private val timeout: Timeout = 5.seconds
 

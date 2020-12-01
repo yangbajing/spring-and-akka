@@ -1,14 +1,13 @@
 package com.helloscala.akka.security.oauth.server
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.{ ActorRef, ActorSystem }
+import akka.cluster.sharding.typed.scaladsl.{ ClusterSharding, EntityRef }
 import akka.util.Timeout
 import com.helloscala.akka.security.authentication.AuthenticationProvider
 import com.helloscala.akka.security.oauth.server.authentication.OAuth2Authorize
 import com.helloscala.akka.security.oauth.server.authentication.client.RegisteredClientRepository
 import com.helloscala.akka.security.oauth.server.crypto.keys.KeyManager
 import com.helloscala.akka.security.oauth.server.jwt.JwtEncoder
-import com.helloscala.akka.security.util.AkkaUtils
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -22,42 +21,28 @@ class OAuth2AuthorizationServerConfigure(system: ActorSystem[_]) {
   implicit private val typedSystem = system
   implicit val timeout: Timeout = 5.seconds
 
-  private var _registeredClientRepository: ActorRef[RegisteredClientRepository.Command] = _
-  private var _jwtEncoder: ActorRef[JwtEncoder.Command] = _
-  private var _keyManager: ActorRef[KeyManager.Command] = _
-  private var _authorizationService: ActorRef[OAuth2AuthorizationService.Command] = _
   private var _clientCredentialsAuthenticationProvider: AuthenticationProvider = _
 
-  def registeredClientRepository: ActorRef[RegisteredClientRepository.Command] = _registeredClientRepository
+  def registeredClientRepository: EntityRef[RegisteredClientRepository.Command] =
+    ClusterSharding(system).entityRefFor(RegisteredClientRepository.TypeKey, EntityIds.entityId)
 
-  def jwtEncoder: ActorRef[JwtEncoder.Command] = _jwtEncoder
+  def jwtEncoder: EntityRef[JwtEncoder.Command] =
+    ClusterSharding(system).entityRefFor(JwtEncoder.TypeKey, EntityIds.entityId)
 
-  def keyManager: ActorRef[KeyManager.Command] = _keyManager
+  def keyManager: EntityRef[KeyManager.Command] =
+    ClusterSharding(system).entityRefFor(KeyManager.TypeKey, EntityIds.entityId)
 
-  def authorizationService: ActorRef[OAuth2AuthorizationService.Command] = _authorizationService
+  def authorizationService: EntityRef[OAuth2AuthorizationService.Command] =
+    ClusterSharding(system).entityRefFor(OAuth2AuthorizationService.TypeKey, EntityIds.entityId)
 
   def oauth2AuthorizeProvider: ActorRef[OAuth2Authorize.Command] = ???
 
   def clientCredentialsAuthenticationProvider: AuthenticationProvider = _clientCredentialsAuthenticationProvider
 
   def init(): Future[Unit] = {
-    _registeredClientRepository = getRegisteredClientRepository()
-    _jwtEncoder = getJwtEncoder()
-    _keyManager = getKeyManager()
-    _authorizationService = getAuthorizationService()
     _clientCredentialsAuthenticationProvider = getClientCredentialsAuthenticationProvider()
     Future.successful(())
   }
-
-  def getRegisteredClientRepository(): ActorRef[RegisteredClientRepository.Command] =
-    AkkaUtils.receptionistFindOneSync(RegisteredClientRepository.Key)
-
-  def getJwtEncoder(): ActorRef[JwtEncoder.Command] = AkkaUtils.receptionistFindOneSync(JwtEncoder.Key)
-
-  def getKeyManager(): ActorRef[KeyManager.Command] = AkkaUtils.receptionistFindOneSync(KeyManager.Key)
-
-  def getAuthorizationService(): ActorRef[OAuth2AuthorizationService.Command] =
-    AkkaUtils.receptionistFindOneSync(OAuth2AuthorizationService.Key)
 
   def getClientCredentialsAuthenticationProvider(): AuthenticationProvider =
     createInstanceFor[AuthenticationProvider]("akka.security.server.authentication-provider.client-credentials")

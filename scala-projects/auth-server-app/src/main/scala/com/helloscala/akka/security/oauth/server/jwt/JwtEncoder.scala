@@ -1,29 +1,22 @@
 package com.helloscala.akka.security.oauth.server.jwt
+
 import java.security.PrivateKey
 import java.security.interfaces.ECPrivateKey
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.receptionist.Receptionist
-import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.AskPattern._
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.scaladsl.StashBuffer
+import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
+import akka.actor.typed.{ ActorRef, Behavior }
+import akka.cluster.sharding.typed.scaladsl.{ ClusterSharding, EntityContext, EntityRef, EntityTypeKey }
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import com.helloscala.akka.security.exception.AkkaSecurityException
 import com.helloscala.akka.security.oauth.jose.JoseHeader
 import com.helloscala.akka.security.oauth.jwt.Jwt
+import com.helloscala.akka.security.oauth.server.EntityIds
 import com.helloscala.akka.security.oauth.server.authentication.OAuth2ClientCredentialsAuthentication
-import com.helloscala.akka.security.oauth.server.crypto.keys.KeyManager
-import com.helloscala.akka.security.oauth.server.crypto.keys.ManagedKey
+import com.helloscala.akka.security.oauth.server.crypto.keys.{ KeyManager, ManagedKey }
 import com.nimbusds.jose.JWSSigner
-import com.nimbusds.jose.crypto.ECDSASigner
-import com.nimbusds.jose.crypto.MACSigner
-import com.nimbusds.jose.crypto.RSASSASigner
-import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jwt.SignedJWT
+import com.nimbusds.jose.crypto.{ ECDSASigner, MACSigner, RSASSASigner }
+import com.nimbusds.jwt.{ JWTClaimsSet, SignedJWT }
 import javax.crypto.SecretKey
 
 import scala.concurrent.duration._
@@ -34,7 +27,8 @@ import scala.concurrent.duration._
  */
 object JwtEncoder {
   trait Command
-  val Key: ServiceKey[Command] = ServiceKey[Command]("JwtEncoder")
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey("JwtEncoder")
+//  val Key: ServiceKey[Command] = ServiceKey[Command]("JwtEncoder")
 
   case class Encode(
       authentication: OAuth2ClientCredentialsAuthentication,
@@ -50,7 +44,7 @@ object JwtEncoder {
       replyTo: ActorRef[StatusReply[Jwt]])
       extends Command
 
-  case class KeyManagerWrapper(listing: Receptionist.Listing) extends Command
+//  case class KeyManagerWrapper(listing: Receptionist.Listing) extends Command
 }
 
 import com.helloscala.akka.security.oauth.server.jwt.JwtEncoder._
@@ -59,20 +53,23 @@ class DefaultJwtEncoder(context: ActorContext[Command]) {
   implicit private val ec = system.executionContext
   implicit private val timeout: Timeout = 5.seconds
 
-  context.system.receptionist
-    .tell(Receptionist.Find(KeyManager.Key, context.messageAdapter[Receptionist.Listing](KeyManagerWrapper)))
+//  context.system.receptionist
+//    .tell(Receptionist.Find(KeyManager.Key, context.messageAdapter[Receptionist.Listing](KeyManagerWrapper)))
 
-  def inactive(stash: StashBuffer[Command]): Behavior[Command] = Behaviors.receiveMessage {
-    case KeyManagerWrapper(KeyManager.Key.Listing(listing)) =>
-      if (listing.isEmpty) Behaviors.same
-      else stash.unstashAll(active(listing.head))
+  def keyManager: EntityRef[KeyManager.Command] =
+    ClusterSharding(system).entityRefFor(KeyManager.TypeKey, EntityIds.entityId)
 
-    case message =>
-      stash.stash(message)
-      Behaviors.same
-  }
+//  def inactive(stash: StashBuffer[Command]): Behavior[Command] = Behaviors.receiveMessage {
+//    case KeyManagerWrapper(KeyManager.Key.Listing(listing)) =>
+//      if (listing.isEmpty) Behaviors.same
+//      else stash.unstashAll(active(listing.head))
+//
+//    case message =>
+//      stash.stash(message)
+//      Behaviors.same
+//  }
 
-  def active(keyManager: ActorRef[KeyManager.Command]): Behavior[Command] = Behaviors.receiveMessagePartial {
+  def active( /*keyManager: ActorRef[KeyManager.Command]*/ ): Behavior[Command] = Behaviors.receiveMessagePartial {
     case Encode(authentication, joseHeader, jwtClaim, replyTo) =>
       val keyId = authentication.registeredClient.keyId
       val f = keyManager.ask[Option[ManagedKey]](ref => KeyManager.FindById(keyId, ref))
@@ -107,12 +104,12 @@ class DefaultJwtEncoder(context: ActorContext[Command]) {
       }
       Behaviors.same
 
-    case KeyManagerWrapper(KeyManager.Key.Listing(listing)) =>
-      if (listing.isEmpty) Behaviors.same
-      else active(listing.head)
+//    case KeyManagerWrapper(KeyManager.Key.Listing(listing)) =>
+//      if (listing.isEmpty) Behaviors.same
+//      else active(listing.head)
   }
 }
 object DefaultJwtEncoder {
-  def apply(): Behavior[Command] =
-    Behaviors.withStash(100)(stash => Behaviors.setup(context => new DefaultJwtEncoder(context).inactive(stash)))
+  def apply(entityContext: EntityContext[Command]): Behavior[Command] =
+    Behaviors.setup(context => new DefaultJwtEncoder(context).active())
 }

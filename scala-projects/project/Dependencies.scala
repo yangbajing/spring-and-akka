@@ -13,8 +13,10 @@ object Dependencies {
   val versionAlpnAgent = "2.0.10"
   val versionAkkaManagement = "1.0.9"
   val versionAkkaSecurity = "0.1"
+  val versionScalaCollectionCompat = "2.3.1"
 
   val _scalatest = "org.scalatest" %% "scalatest" % versionScalatest
+  val _scalaCollectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versionScalaCollectionCompat
 
   val _akkaActorTyped = "com.typesafe.akka" %% "akka-actor-typed" % versionAkka
   val _akkaStreamTyped = "com.typesafe.akka" %% "akka-stream-typed" % versionAkka
@@ -42,7 +44,9 @@ object Dependencies {
       .cross(CrossVersion.binary),
     _alpnAgent)
 
-  val _akkaManagementConsul = "com.lightbend.akka.discovery" %% "akka-discovery-consul" % versionAkkaManagement
+  val _akkaDiscoveryConsul = "com.lightbend.akka.discovery" %% "akka-discovery-consul" % versionAkkaManagement
+  val _akkaManagementClusterBootstrap = "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % versionAkkaManagement
+  val _akkaManagementClusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % versionAkkaManagement
 
   val _alpakkaCsv =
     ("com.lightbend.akka" %% "akka-stream-alpakka-csv" % versionAlpakka)
@@ -79,4 +83,6 @@ object Dependencies {
   val _springs = Seq("org.springframework.boot" % "spring-boot-starter-web" % versionSpringBoot)
 
   val _guava = "com.google.guava" % "guava" % "30.0-jre"
+
+  val _consulClient = "com.orbitz.consul" % "consul-client" % "1.4.2"
 }

@@ -2,11 +2,9 @@ package com.helloscala.akka.security.oauth.server.authentication.client
 
 import java.util.UUID
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
+import akka.actor.typed.{ ActorRef, Behavior }
+import akka.cluster.sharding.typed.scaladsl.{ EntityContext, EntityTypeKey }
 
 import scala.collection.mutable
 
@@ -17,7 +15,7 @@ import scala.collection.mutable
 object RegisteredClientRepository {
   val DEFAULT_SCOPES = Set("message.read", "message.write", "api.read", "api.write")
   trait Command
-  val Key = ServiceKey[Command]("RegisteredClientRepository")
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey("RegisteredClientRepository")
 
   case class FindById(id: String, replyTo: ActorRef[Option[RegisteredClient]]) extends Command
   case class FindByClientId(clientId: String, replyTo: ActorRef[Option[RegisteredClient]]) extends Command
@@ -43,5 +41,6 @@ class InMemoryRegisteredClientRepository(context: ActorContext[Command]) {
     }
 }
 object InMemoryRegisteredClientRepository {
-  def apply(): Behavior[Command] = Behaviors.setup(context => new InMemoryRegisteredClientRepository(context).receive())
+  def apply(entityContext: EntityContext[Command]): Behavior[Command] =
+    Behaviors.setup(context => new InMemoryRegisteredClientRepository(context).receive())
 }
