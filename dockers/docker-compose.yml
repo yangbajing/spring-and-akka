@@ -12,15 +12,15 @@ services:
     networks:
       - yjnet
 
-  yj-consul-client:
+  yj-consul-agent:
     image: consul
-    container_name: yj-consul-client
+    container_name: yj-consul-agent
     restart: on-failure
     depends_on:
       - yj-consul-server
     ports:
       - 8500:8500
-    command: agent -node=client -join=yj-consul-server -client=0.0.0.0
+    command: agent -node=agent -join=yj-consul-server -client=0.0.0.0
     networks:
       - yjnet
 

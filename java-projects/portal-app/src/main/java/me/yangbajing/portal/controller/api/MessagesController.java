@@ -15,25 +15,34 @@
  */
 package me.yangbajing.portal.controller.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import auth.grpc.GreeterServiceGrpc;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
 @RequestMapping(path = "/messages")
 public class MessagesController {
+    @GrpcClient("auth-server")
+    private GreeterServiceGrpc.GreeterServiceBlockingStub greeterService;
 
     @Autowired
     private DiscoveryClient discoveryClient;
+
+    @PostMapping(path = "sayHello")
+    public String  sayHello(@RequestBody JsonNode payload) {
+        String name = payload.get("name").asText();
+        return greeterService.sayHello(auth.grpc.HelloRequest.newBuilder().setName(name).build()).getMessage();
+    }
 
     @GetMapping(path = "/members/{serviceId}")
     public List<ServiceInstance> members(@PathVariable String serviceId) {

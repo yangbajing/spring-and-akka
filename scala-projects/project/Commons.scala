@@ -1,7 +1,7 @@
 import Dependencies._
 import bintray.BintrayKeys._
 import com.typesafe.sbt.SbtNativePackager.autoImport.maintainer
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ HeaderLicense, headerLicense }
+import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
 import sbt.Keys._
 import sbt._
 
@@ -69,7 +69,7 @@ object Environment {
 
 object Packaging {
   // Good example https://github.com/typesafehub/activator/blob/master/project/Packaging.scala
-  import Environment.{ BuildEnv, buildEnv }
+  import Environment.{ buildEnv, BuildEnv }
   import com.typesafe.sbt.SbtNativePackager._
   import com.typesafe.sbt.packager.Keys._
   import sbtassembly.AssemblyKeys.{ assembly, assemblyMergeStrategy }

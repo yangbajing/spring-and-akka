@@ -13,8 +13,13 @@ object Dependencies {
   val versionAlpnAgent = "2.0.10"
   val versionAkkaManagement = "1.0.9"
   val versionAkkaSecurity = "0.1"
+  val versionScalaCollectionCompat = "2.3.1"
+  val versionScalaJava8Compat = "0.9.1"
+  val versionGrpc = "1.32.1"
 
   val _scalatest = "org.scalatest" %% "scalatest" % versionScalatest
+  val _scalaCollectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versionScalaCollectionCompat
+  val _scalaJava8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % versionScalaJava8Compat
 
   val _akkaActorTyped = "com.typesafe.akka" %% "akka-actor-typed" % versionAkka
   val _akkaStreamTyped = "com.typesafe.akka" %% "akka-stream-typed" % versionAkka
@@ -25,24 +30,32 @@ object Dependencies {
   val _akkaTypedTestkit = "com.typesafe.akka" %% "akka-actor-testkit-typed" % versionAkka
   val _akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % versionAkka
 
-  val _akkas =
-    Seq("com.typesafe.akka" %% "akka-slf4j" % versionAkka, _akkaActorTyped, _akkaStreamTyped)
-      .map(_.exclude("org.scala-lang.modules", "scala-java8-compat").cross(CrossVersion.binary))
+  val _akkas = _scalaJava8Compat +: Seq(
+      "com.typesafe.akka" %% "akka-slf4j" % versionAkka,
+      _akkaDiscovery,
+      _akkaActorTyped,
+      _akkaStreamTyped).map(_.exclude("org.scala-lang.modules", "scala-java8-compat").cross(CrossVersion.binary))
 
-  val _akkaClusters = Seq(
-    _akkaDiscovery,
-    "com.typesafe.akka" %% "akka-cluster-typed" % versionAkka,
-    "com.typesafe.akka" %% "akka-cluster-sharding-typed" % versionAkka)
+  val _akkaClusterShardingTyped = "com.typesafe.akka" %% "akka-cluster-sharding-typed" % versionAkka
+
+  val _akkaClusters = Seq("com.typesafe.akka" %% "akka-cluster-typed" % versionAkka, _akkaClusterShardingTyped)
 
   val _alpnAgent = "org.mortbay.jetty.alpn" % "jetty-alpn-agent" % versionAlpnAgent
 
-  val _akkaHttps = Seq(
-    ("com.typesafe.akka" %% "akka-http" % versionAkkaHttp)
-      .exclude("com.typesafe.akka", "akka-stream")
-      .cross(CrossVersion.binary),
-    _alpnAgent)
+  val _akkaHttp = "com.typesafe.akka" %% "akka-http" % versionAkkaHttp
 
-  val _akkaManagementConsul = "com.lightbend.akka.discovery" %% "akka-discovery-consul" % versionAkkaManagement
+  val _akkaHttps = _alpnAgent +: Seq(
+      "com.typesafe.akka" %% "akka-http-spray-json" % versionAkkaHttp,
+      "com.typesafe.akka" %% "akka-http2-support" % versionAkkaHttp,
+      "com.typesafe.akka" %% "akka-http-core" % versionAkkaHttp,
+      _akkaHttp).map(
+      _.exclude("com.typesafe.akka", "akka-stream")
+        .exclude("com.typesafe.akka", "akka-http-spary-json")
+        .cross(CrossVersion.binary))
+
+  val _akkaDiscoveryConsul = "com.lightbend.akka.discovery" %% "akka-discovery-consul" % versionAkkaManagement
+  val _akkaManagementClusterBootstrap = "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % versionAkkaManagement
+  val _akkaManagementClusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % versionAkkaManagement
 
   val _alpakkaCsv =
     ("com.lightbend.akka" %% "akka-stream-alpakka-csv" % versionAlpakka)
@@ -79,4 +92,8 @@ object Dependencies {
   val _springs = Seq("org.springframework.boot" % "spring-boot-starter-web" % versionSpringBoot)
 
   val _guava = "com.google.guava" % "guava" % "30.0-jre"
+
+  val _consulClient = "com.orbitz.consul" % "consul-client" % "1.4.2"
+
+  val _grpcs = Seq("io.grpc" % "grpc-core" % versionGrpc)
 }

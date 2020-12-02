@@ -4,10 +4,7 @@ server:
 logging:
   level:
     root: INFO
-    #    org.springframework.web: INFO
-    #    org.springframework.security: INFO
     org.springframework.security.oauth2: DEBUG
-#    org.springframework.boot.autoconfigure: DEBUG
 
 spring:
   application:
@@ -22,11 +19,15 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://oauth-server:9000/oauth2/jwks
+          jwk-set-uri: http://auth-server:9000/oauth2/jwks
 
 grpc:
   client:
     user-app:
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    auth-server:
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext

@@ -1,6 +1,13 @@
-# Spring and Akka's hybrid microservices project.
+# Spring and Akka's hybrid microservices in real-world applications
 
 ## Run & Test
+
+### Starting data services with the Docker
+
+```
+cd dockers
+docker-compose up -d yj-consul-server yj-consul-agent
+```
 
 ### Run the Samples
 
@@ -17,27 +24,28 @@
         - *Perform spring-boot:run before must be perform `mvn -DskipTests compile`*
 
 ### Beginning test
-                                                                                                                                                                                                                                                               
-#### Get `access_token`                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                               
-```                                                                                                                                                                                                                                                            
-curl -i -XPOST 'http://localhost:9000/oauth2/token' \                                                                                                                                                                                                          
-  -u 'ec-client:secret' \                                                                                                                                                                                                                               
-  -H 'Content-Type: application/x-www-form-urlencoded' \                                                                                                                                                                                                       
-  -d 'grant_type=client_credentials&scope=message.read%20api.read'                                                                                                                                                                                                        
-```                                                                                                                                                                                                                                                            
-Example of response:                                                                                                                                                                                                                                           
-```                                                                                                                                                                                                                                                            
-HTTP/1.1 200 OK                                                                                                                                                                                                                                                
-Server: akka-http/10.2.0                                                                                                                                                                                                                                       
-Date: Mon, 21 Sep 2020 02:03:54 GMT                                                                                                                                                                                                                            
-Content-Type: application/json                                                                                                                                                                                                                                 
-Content-Length: 667                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                               
-{                                                                                                                                                                                                                                                              
-  "access_token":"eyJraWQiOiJlYy1rZXkiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYy1jbGllbnQiLCJzY29wZSI6Im1lc3NhZ2UucmVhZCIsImlzcyI6Imh0dHBzOlwvXC9ha2thLXNlY3VyaXR5LmhlbGxvc2NhbGEuY29tIiwiZXhwIjoxNjA1Nzk5ODgxLCJpYXQiOjE2MDUxOTQ3ODEsImp0aSI6ImVjLWtleSJ9.ebtN29ey5lk
-p2wtH9NeABqpcDswLZHBWgVhof2qMvD-QgKeu5rJHArxnnh_4hRDlUCH9bo6H_UKu5BYtq-E-Kw",                                                                                                                                                                                  
-  "scope":"message.read",                                                                                                                                                                                                                                      
+
+#### Get `access_token`
+
+```
+curl -i -XPOST 'http://localhost:9000/oauth2/token' \
+  -u 'ec-client:secret' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=client_credentials&scope=message.read%20api.read'
+```
+
+Example of response:
+
+```
+HTTP/1.1 200 OK
+Server: akka-http/10.2.0
+Date: Mon, 21 Sep 2020 02:03:54 GMT
+Content-Type: application/json
+Content-Length: 667
+
+{
+  "access_token":"eyJraWQiOiJlYy1rZXkiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYy1jbGllbnQiLCJzY29wZSI6Im1lc3NhZ2UucmVhZCIsImlzcyI6Imh0dHBzOlwvXC9ha2thLXNlY3VyaXR5LmhlbGxvc2NhbGEuY29tIiwiZXhwIjoxNjA1Nzk5ODgxLCJpYXQiOjE2MDUxOTQ3ODEsImp0aSI6ImVjLWtleSJ9.ebtN29ey5lkp2wtH9NeABqpcDswLZHBWgVhof2qMvD-QgKeu5rJHArxnnh_4hRDlUCH9bo6H_UKu5BYtq-E-Kw",
+  "scope":"message.read",
   "token_type":"Bearer",
   "expires_in":"605100"
 }
@@ -51,15 +59,15 @@ p2wtH9NeABqpcDswLZHBWgVhof2qMvD-QgKeu5rJHArxnnh_4hRDlUCH9bo6H_UKu5BYtq-E-Kw",
 >   -d 'grant_type=client_credentials&scope=message.read%20api.read&algorithm=RS256'
 > ```
 
-
-  
 #### Access to `/api/user/get/{id}`
 
 ```
 curl -i 'http://localhost:8090/api/user/get/1' \
   -H 'Authorization: Bearer <access_token>'
 ```
+
 *Please replace the `<access_token>` punctuation character with the correct `access_token`, which can be found in the previous example.* Example of response:
+
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -81,14 +89,15 @@ Referrer-Policy: no-referrer
 }
 ```
 
-  
 #### Access to `messages`
 
 ```
 curl -i 'http://localhost:8090/messages' \
   -H 'Authorization: Bearer <access_token>'
 ```
+
 *Please replace the `<access_token>` punctuation character with the correct `access_token`, which can be found in the previous example.* Example of response:
+
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json

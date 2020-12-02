@@ -1,15 +1,18 @@
 package me.yangbajing.auth.server
 
-import akka.actor.typed.{ ActorSystem, SpawnProtocol }
+import akka.actor.typed.SpawnProtocol
+import akka.fusion.management.HealthCheckUtils
 import akka.http.scaladsl.Http
-import com.google.common.net.HostAndPort
-import com.helloscala.akka.security.oauth.server.{ OAuth2AuthorizationServerCreator, OAuth2Route }
-import com.orbitz.consul.Consul
-import com.orbitz.consul.model.agent.{ ImmutableRegistration, Registration }
+import akka.management.cluster.scaladsl.ClusterHttpManagementRoutes
+import akka.management.scaladsl.AkkaManagement
+import auth.grpc.GreeterServiceHandler
+import com.helloscala.akka.security.oauth.server.OAuth2Route
+import com.orbitz.consul.model.agent.{ ImmutableRegCheck, ImmutableRegistration }
 import com.typesafe.scalalogging.StrictLogging
+import helloscala.fusion.consul.{ FusionCloudConfigConsul, FusionCloudDiscoveryConsul, FusionConsulFactory }
+import helloscala.fusion.grpc.GrpcUtils
+import me.yangbajing.auth.server.grpc.impl.GreeterServiceImpl
 
-import scala.concurrent.Await
-import scala.concurrent.duration.DurationInt
 import scala.io.StdIn
 
 /**
@@ -18,31 +21,39 @@ import scala.io.StdIn
  */
 object AuthServerApplication extends StrictLogging {
   def main(args: Array[String]): Unit = {
-    implicit val system = ActorSystem(SpawnProtocol(), "oauth-server")
+    val fusionFactory = FusionConsulFactory.fromByConfig()
+    implicit val system = fusionFactory.initActorSystem(SpawnProtocol())
     import system.executionContext
-    Await.result(OAuth2AuthorizationServerCreator.init(system), 2.seconds)
-    val route = new OAuth2Route(system).route
-    val host = "localhost"
-    val port = 9000
-    val bindingFuture = Http().newServerAt(host, port).bind(route)
 
-    val consul = Consul.builder().withHostAndPort(HostAndPort.fromParts("localhost", 8500)).build()
-    val registration = ImmutableRegistration
-      .builder()
-      .id("oauth-server-9000")
-      .name("oauth-server")
-      .addTags("secure=false", s"gRPC.port=$port")
-      .address(host)
-      .port(port)
-      .build()
-    consul.agentClient().register(registration)
+    new AuthorizationServerEntitiesCreator(system).init()
 
-    system.classicSystem.registerOnTermination(() => consul.destroy())
+    val cloudConfig = FusionCloudConfigConsul(system)
+    val cloudDiscovery = FusionCloudDiscoveryConsul(system)
+
+    val grpcServices = GreeterServiceHandler(new GreeterServiceImpl(system))
+//    val managementRoute = ClusterHttpManagementRoutes(akka.cluster.Cluster(system))
+    val route = GrpcUtils.concatRoute(new OAuth2Route(system).route, GrpcUtils.toRoute(grpcServices) /*,
+      managementRoute,
+      HealthCheckUtils.healthRoute(system)*/ )
+
+    val bindingFuture = Http().newServerAt(cloudConfig.serverHost, cloudConfig.serverPort).bind(route)
+    AkkaManagement(system).start().foreach { uri =>
+      val registrationBuilder = cloudDiscovery.configureRegistration(ImmutableRegistration.builder())
+      registrationBuilder.check(
+        ImmutableRegCheck.builder().interval("5.s").http("http://172.17.0.1:8558/health/alive").build())
+      cloudDiscovery.register(registrationBuilder.build())
+    }
+
+    bindingFuture.foreach { binding =>
+      val registrationBuilder = cloudDiscovery.configureRegistration(ImmutableRegistration.builder())
+      registrationBuilder.port(binding.localAddress.getPort)
+      cloudDiscovery.register(registrationBuilder.build())
+    }
 
     logger.info(s"Server online at http://localhost:9000/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
+      .flatMap(_.unbind()) // trigger unbinding from the serverPort
       .onComplete(_ => system.terminate()) // and shutdown when done
   }
 }

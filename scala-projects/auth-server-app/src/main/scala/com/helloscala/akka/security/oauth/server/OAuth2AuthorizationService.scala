@@ -1,10 +1,8 @@
 package com.helloscala.akka.security.oauth.server
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
+import akka.actor.typed.{ ActorRef, Behavior }
+import akka.cluster.sharding.typed.scaladsl.{ EntityContext, EntityTypeKey }
 import com.helloscala.akka.security.oauth.core.TokenType
 import com.helloscala.akka.security.oauth.server.authentication.OAuth2AccessTokenAuthenticationToken
 
@@ -15,7 +13,7 @@ import com.helloscala.akka.security.oauth.server.authentication.OAuth2AccessToke
 object OAuth2AuthorizationService {
   trait Command
   trait Event extends Command
-  val Key = ServiceKey[Command]("OAuth2AuthorizationService")
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey("OAuth2AuthorizationService")
 
   case class FindByToken(
       token: String,
@@ -26,7 +24,7 @@ object OAuth2AuthorizationService {
 }
 
 import com.helloscala.akka.security.oauth.server.OAuth2AuthorizationService._
-class InMemoryAuthorizationService(context: ActorContext[Command]) {
+class InMemoryOauth2AuthorizationService(context: ActorContext[Command]) {
   def receive(tokens: Map[String, OAuth2AccessTokenAuthenticationToken]): Behavior[Command] =
     Behaviors.receiveMessagePartial {
       case Save(authenticationToken) =>
@@ -37,6 +35,7 @@ class InMemoryAuthorizationService(context: ActorContext[Command]) {
     }
 }
 
-object InMemoryAuthorizationService {
-  def apply(): Behavior[Command] = Behaviors.setup(context => new InMemoryAuthorizationService(context).receive(Map()))
+object InMemoryOauth2AuthorizationService {
+  def apply(entityContext: EntityContext[Command]): Behavior[Command] =
+    Behaviors.setup(context => new InMemoryOauth2AuthorizationService(context).receive(Map()))
 }

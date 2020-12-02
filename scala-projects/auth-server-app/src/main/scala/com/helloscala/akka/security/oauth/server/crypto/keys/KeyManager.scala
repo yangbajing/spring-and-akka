@@ -1,10 +1,8 @@
 package com.helloscala.akka.security.oauth.server.crypto.keys
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
+import akka.actor.typed.{ ActorRef, Behavior }
+import akka.cluster.sharding.typed.scaladsl.{ EntityContext, EntityTypeKey }
 
 /**
  * @author Yang Jing <a href="mailto:yang.xunjing@qq.com">yangbajing</a>
@@ -12,7 +10,7 @@ import akka.actor.typed.scaladsl.Behaviors
  */
 object KeyManager {
   trait Command
-  val Key: ServiceKey[Command] = ServiceKey[Command]("KeyManager")
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey("KeyManager")
 
   case class FindById(id: String, replyTo: ActorRef[Option[ManagedKey]]) extends Command
   case class FindByAlgorithm(algorithm: String, replyTo: ActorRef[Set[ManagedKey]]) extends Command
@@ -36,7 +34,7 @@ class InMemoryKeyManager(context: ActorContext[Command]) {
   }
 }
 object InMemoryKeyManager {
-  def apply(): Behavior[Command] = Behaviors.setup { context =>
+  def apply(entityContext: EntityContext[Command]): Behavior[Command] = Behaviors.setup { context =>
     new InMemoryKeyManager(context).receive(KeyUtils.generateKeys())
   }
 }
