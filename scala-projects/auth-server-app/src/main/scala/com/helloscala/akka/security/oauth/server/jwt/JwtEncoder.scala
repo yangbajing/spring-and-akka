@@ -2,7 +2,6 @@ package com.helloscala.akka.security.oauth.server.jwt
 
 import java.security.PrivateKey
 import java.security.interfaces.ECPrivateKey
-
 import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
 import akka.actor.typed.{ ActorRef, Behavior }
 import akka.cluster.sharding.typed.scaladsl.{ ClusterSharding, EntityContext, EntityRef, EntityTypeKey }
@@ -11,14 +10,14 @@ import akka.util.Timeout
 import com.helloscala.akka.security.exception.AkkaSecurityException
 import com.helloscala.akka.security.oauth.jose.JoseHeader
 import com.helloscala.akka.security.oauth.jwt.Jwt
-import com.helloscala.akka.security.oauth.server.EntityIds
 import com.helloscala.akka.security.oauth.server.authentication.OAuth2ClientCredentialsAuthentication
 import com.helloscala.akka.security.oauth.server.crypto.keys.{ KeyManager, ManagedKey }
 import com.nimbusds.jose.JWSSigner
 import com.nimbusds.jose.crypto.{ ECDSASigner, MACSigner, RSASSASigner }
 import com.nimbusds.jwt.{ JWTClaimsSet, SignedJWT }
-import javax.crypto.SecretKey
+import helloscala.fusion.cloud.EntityIds
 
+import javax.crypto.SecretKey
 import scala.concurrent.duration._
 
 /**

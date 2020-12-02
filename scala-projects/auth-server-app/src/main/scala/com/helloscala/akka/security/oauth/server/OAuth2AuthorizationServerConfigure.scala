@@ -8,6 +8,7 @@ import com.helloscala.akka.security.oauth.server.authentication.OAuth2Authorize
 import com.helloscala.akka.security.oauth.server.authentication.client.RegisteredClientRepository
 import com.helloscala.akka.security.oauth.server.crypto.keys.KeyManager
 import com.helloscala.akka.security.oauth.server.jwt.JwtEncoder
+import helloscala.fusion.cloud.EntityIds
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -18,7 +19,6 @@ import scala.reflect.ClassTag
  * @date 2020-09-20 22:20:15
  */
 class OAuth2AuthorizationServerConfigure(system: ActorSystem[_]) {
-  implicit private val typedSystem = system
   implicit val timeout: Timeout = 5.seconds
 
   private var _clientCredentialsAuthenticationProvider: AuthenticationProvider = _

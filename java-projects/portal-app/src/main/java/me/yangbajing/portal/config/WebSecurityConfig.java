@@ -52,12 +52,13 @@ public class WebSecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/messages/**").hasAuthority("SCOPE_message.read")
-                        .pathMatchers("/api/**").hasAuthority("SCOPE_api.read")
                         .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/messages/**").permitAll() //.hasAuthority("SCOPE_message.read")
+                        .pathMatchers("/api/**").hasAuthority("SCOPE_api.read")
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults()))
+                .csrf().disable()
                 .build();
     }
 }

@@ -17,6 +17,11 @@ class FusionConsulTest extends AnyWordSpec with Matchers with BeforeAndAfterAll 
       val value = fusionConsul.getValueAsString("yj/local/auth-server.conf").value
       println(value)
     }
+
+    "getConfig" in {
+      val config = fusionConsul.getConfig("yj/local/auth-server.conf")
+      config.getString("fusion.consul.test.description") shouldBe "consul"
+    }
   }
 
   override protected def afterAll(): Unit = {

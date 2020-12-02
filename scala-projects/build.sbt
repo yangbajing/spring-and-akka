@@ -17,8 +17,11 @@ lazy val root = (project in file("."))
     `message-app`,
     `message-grpc`,
     `scala-common`,
-    `fusion-consul`)
-  .settings(Commons.basicSettings)
+    `fusion-grpc`,
+    `fusion-consul`,
+    `fusion-cloud`)
+  .settings(Commons.basicSettings: _*)
+  .settings(name := "scala-projects")
 
 lazy val `gateway-app` =
   _project("gateway-app")
@@ -26,11 +29,11 @@ lazy val `gateway-app` =
     .settings(Publishing.noPublish: _*)
     .settings(libraryDependencies ++= Seq(_akkaDiscoveryConsul) ++ _akkaClusters)
 
-lazy val `gateway-grpc` = (project in file("gateway-grpc")).settings(Commons.basicSettings)
+lazy val `gateway-grpc` = (project in file("gateway-grpc")).settings(Commons.basicSettings: _*)
 
 lazy val `auth-server-app` =
   _project("auth-server-app")
-    .dependsOn(`auth-server-grpc`, `fusion-consul`, `scala-common`)
+    .dependsOn(`auth-server-grpc`, `scala-common`, `fusion-consul`, `fusion-grpc`)
     .settings(Publishing.noPublish: _*)
     .settings(
       libraryDependencies ++= Seq(
@@ -40,22 +43,41 @@ lazy val `auth-server-app` =
           _akkaManagementClusterBootstrap,
           _akkaManagementClusterHttp) ++ _akkaClusters)
 
-lazy val `auth-server-grpc` = project in file("auth-server-grpc")
+lazy val `auth-server-grpc` = (project in file("auth-server-grpc"))
+  .enablePlugins(AkkaGrpcPlugin)
+  .settings(Commons.basicSettings: _*)
+  .settings(akkaGrpcCodeGeneratorSettings += "server_power_apis")
 
 lazy val `message-app` =
   _project("message-app").dependsOn(`message-grpc`, `scala-common`).settings(Publishing.noPublish: _*)
 
-lazy val `message-grpc` = (project in file("message-grpc")).settings(Commons.basicSettings)
-
-lazy val `fusion-consul` = _project("fusion-consul")
-  .settings(organization := "com.helloscala.fusion", libraryDependencies ++= Seq(_consulClient)++ _akkas)
+lazy val `message-grpc` = (project in file("message-grpc")).settings(Commons.basicSettings: _*)
 
 lazy val `scala-common` =
-  _project("scala-common").settings(libraryDependencies ++= Seq(
+  _project("scala-common").dependsOn(`fusion-cloud`).settings(libraryDependencies ++= _akkaHttps)
+
+lazy val `fusion-consul` = _project("fusion-consul")
+  .dependsOn(`fusion-cloud`)
+  .settings(organization := "com.helloscala.fusion", libraryDependencies ++= Seq(_consulClient))
+
+lazy val `fusion-grpc` = _project("fusion-grpc")
+  .dependsOn(`fusion-cloud`)
+  .settings(Commons.basicSettings: _*)
+  .settings(
+    Compile / unmanagedResourceDirectories += sourceDirectory.value / "protobuf",
+    organization := "com.helloscala.fusion",
+    libraryDependencies ++= Seq(_akkaHttp) ++ _grpcs)
+
+lazy val `fusion-cloud` = _project("fusion-cloud").settings(
+  organization := "com.helloscala.fusion",
+  libraryDependencies ++= Seq(
+      _akkaClusterShardingTyped,
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      _scalaCollectionCompat) ++ _akkas ++ _akkaHttps ++ _logs)
+      _scalaJava8Compat,
+      _scalaCollectionCompat) ++ _akkas ++ _logs)
 
 def _project(name: String, path: String = null) =
   Project(name, file(if (path == null || path.isEmpty) name else path))
-    .settings(Commons.basicSettings)
+    .disablePlugins(AkkaGrpcPlugin)
+    .settings(Commons.basicSettings: _*)
     .settings(libraryDependencies ++= Seq(_akkaTypedTestkit % Test, _akkaStreamTestkit % Test, _scalatest % Test))
