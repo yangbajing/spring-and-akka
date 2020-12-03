@@ -13,8 +13,9 @@ import scala.collection.mutable
  * @date 2020-09-19 17:53:41
  */
 object RegisteredClientRepository {
-  val DEFAULT_SCOPES = Set("message.read", "message.write", "api.read", "api.write")
   trait Command
+
+  val DEFAULT_SCOPES = Set("message.read", "message.write", "api.read", "api.write")
   val TypeKey: EntityTypeKey[Command] = EntityTypeKey("RegisteredClientRepository")
 
   case class FindById(id: String, replyTo: ActorRef[Option[RegisteredClient]]) extends Command
@@ -24,8 +25,8 @@ object RegisteredClientRepository {
 import com.helloscala.akka.security.oauth.server.authentication.client.RegisteredClientRepository._
 class InMemoryRegisteredClientRepository(context: ActorContext[Command]) {
   private val clients = List(
-    RegisteredClient(UUID.randomUUID().toString, "messaging-client", "secret", Set(), DEFAULT_SCOPES, "rsa-key"),
-    RegisteredClient(UUID.randomUUID().toString, "ec-client", "secret", Set(), DEFAULT_SCOPES, "ec-key"))
+    RegisteredClient(UUID.randomUUID().toString, "messaging-client", "secret", Set(), DEFAULT_SCOPES),
+    RegisteredClient(UUID.randomUUID().toString, "ec-client", "secret", Set(), DEFAULT_SCOPES))
   private val clientIdRegisteredClientMap = mutable.Map[String, RegisteredClient]() ++ clients.map(v => v.clientId -> v)
   private val idRegisteredClientMap = mutable.Map[String, RegisteredClient]() ++ clients.map(v => v.id -> v)
 

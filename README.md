@@ -6,7 +6,7 @@
 
 ```
 cd dockers
-docker-compose up -d yj-consul-server yj-consul-agent
+docker-compose up -d yj-consul-server yj-consul-agent yj-postgres
 ```
 
 ### Run the Samples

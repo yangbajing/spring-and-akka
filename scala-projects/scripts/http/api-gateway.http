@@ -1,0 +1,4 @@
+### Get user by id.
+GET http://{{host}}:8090/gateway/user/get/1
+Accept: application/json
+Authorization: Bearer eyJraWQiOiJlYy1rZXkiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYy1jbGllbnQiLCJzY29wZSI6Im1lc3NhZ2UucmVhZCBhcGkucmVhZCIsImlzcyI6Imh0dHBzOlwvXC9ha2thLXNlY3VyaXR5LmhlbGxvc2NhbGEuY29tIiwiZXhwIjoxNjA3NTA5NjIxLCJpYXQiOjE2MDY5MDQ1MjEsImp0aSI6ImVjLWtleSJ9.3-bTb6EZ0IRWHDLaW5UM8Xrt2aq1JiddDmiSOlGapjU8r9zvo8EwbejhNdz5-6Bvf5s2vNH272OL4nBiyt_8iw

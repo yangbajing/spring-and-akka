@@ -12,14 +12,20 @@ object Dependencies {
   val versionLogback = "1.2.3"
   val versionAlpnAgent = "2.0.10"
   val versionAkkaManagement = "1.0.9"
-  val versionAkkaSecurity = "0.1"
+  val versionAkkaSecurity = "0.2.0"
   val versionScalaCollectionCompat = "2.3.1"
   val versionScalaJava8Compat = "0.9.1"
   val versionGrpc = "1.32.1"
+  val versionSlick = "3.3.3"
+  val versionSlickPg = "0.19.4"
+  val versionPostgres = "42.2.18"
+  val versionHelloscala = "2.0.7-SNAPSHOT"
 
   val _scalatest = "org.scalatest" %% "scalatest" % versionScalatest
   val _scalaCollectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versionScalaCollectionCompat
   val _scalaJava8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % versionScalaJava8Compat
+
+  val _helloscalaCommon = "com.helloscala" %% "helloscala-common" % versionHelloscala
 
   val _akkaActorTyped = "com.typesafe.akka" %% "akka-actor-typed" % versionAkka
   val _akkaStreamTyped = "com.typesafe.akka" %% "akka-stream-typed" % versionAkka
@@ -85,9 +91,7 @@ object Dependencies {
 
   val _javaUuidGenerator = "com.fasterxml.uuid" % "java-uuid-generator" % "4.0.1"
 
-  val _logs = Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % versionScalaLogging,
-    "ch.qos.logback" % "logback-classic" % versionLogback)
+  val _logback = "ch.qos.logback" % "logback-classic" % versionLogback
 
   val _springs = Seq("org.springframework.boot" % "spring-boot-starter-web" % versionSpringBoot)
 
@@ -96,4 +100,17 @@ object Dependencies {
   val _consulClient = "com.orbitz.consul" % "consul-client" % "1.4.2"
 
   val _grpcs = Seq("io.grpc" % "grpc-core" % versionGrpc)
+
+  val _hikariCP = "com.zaxxer" % "HikariCP" % "3.4.5"
+
+  val _slicks =
+    Seq(
+      "com.typesafe.slick" %% "slick" % versionSlick,
+      ("com.typesafe.slick" %% "slick-hikaricp" % versionSlick).exclude("com.zaxxer", "HikariCP"),
+      _hikariCP,
+      "com.typesafe.slick" %% "slick-testkit" % versionSlick % Test)
+
+  val _slickPg = "com.github.tminglei" %% "slick-pg" % versionSlickPg
+
+  val _postgresql = "org.postgresql" % "postgresql" % versionPostgres
 }

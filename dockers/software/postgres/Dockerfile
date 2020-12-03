@@ -10,6 +10,7 @@ COPY .pgpass /root/.pgpass
 COPY init.sh /docker-entrypoint-initdb.d/
 COPY init.sql /data/
 COPY yj_platform-ddl.sql /data/
+COPY auth-server.sql /data/
 
 RUN chmod 0600 /root/.pgpass
 #&& apt-get -y update && \

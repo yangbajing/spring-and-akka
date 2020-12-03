@@ -8,6 +8,8 @@ ThisBuild / scalaVersion := versionScala213
 
 ThisBuild / scalafmtOnCompile := true
 
+ThisBuild / resolvers += Resolver.bintrayRepo("helloscala", "maven")
+
 lazy val root = (project in file("."))
   .aggregate(
     `gateway-app`,
@@ -39,9 +41,11 @@ lazy val `auth-server-app` =
       libraryDependencies ++= Seq(
           akkaSecurityOauthJose,
           akkaSecurityOauthCore,
+          _slickPg,
+          _postgresql,
           _akkaDiscoveryConsul,
           _akkaManagementClusterBootstrap,
-          _akkaManagementClusterHttp) ++ _akkaClusters)
+          _akkaManagementClusterHttp) ++ _slicks ++ _akkaClusters)
 
 lazy val `auth-server-grpc` = (project in file("auth-server-grpc"))
   .enablePlugins(AkkaGrpcPlugin)
@@ -54,7 +58,9 @@ lazy val `message-app` =
 lazy val `message-grpc` = (project in file("message-grpc")).settings(Commons.basicSettings: _*)
 
 lazy val `scala-common` =
-  _project("scala-common").dependsOn(`fusion-cloud`).settings(libraryDependencies ++= _akkaHttps)
+  _project("scala-common")
+    .dependsOn(`fusion-cloud`)
+    .settings(libraryDependencies ++= Seq(_helloscalaCommon, _logback) ++ _akkaHttps)
 
 lazy val `fusion-consul` = _project("fusion-consul")
   .dependsOn(`fusion-cloud`)
@@ -73,8 +79,7 @@ lazy val `fusion-cloud` = _project("fusion-cloud").settings(
   libraryDependencies ++= Seq(
       _akkaClusterShardingTyped,
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      _scalaJava8Compat,
-      _scalaCollectionCompat) ++ _akkas ++ _logs)
+      _helloscalaCommon) ++ _akkas)
 
 def _project(name: String, path: String = null) =
   Project(name, file(if (path == null || path.isEmpty) name else path))

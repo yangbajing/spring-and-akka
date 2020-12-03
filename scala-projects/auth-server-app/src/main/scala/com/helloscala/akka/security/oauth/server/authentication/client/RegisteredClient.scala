@@ -9,8 +9,4 @@ case class RegisteredClient(
     clientId: String,
     clientSecret: String,
     redirectUris: Set[String],
-    scopes: Set[String],
-    /**
-     * Crypto key, see [[com.helloscala.akka.security.oauth.server.crypto.keys.ManagedKey.id]]
-     */
-    keyId: String)
+    scopes: Set[String])

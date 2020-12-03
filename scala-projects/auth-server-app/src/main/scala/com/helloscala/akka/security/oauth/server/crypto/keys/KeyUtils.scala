@@ -1,48 +1,147 @@
 package com.helloscala.akka.security.oauth.server.crypto.keys
 
-import java.io.StringWriter
-import java.math.BigInteger
-import java.nio.file.Files
-import java.nio.file.Path
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.security.interfaces.ECPublicKey
-import java.security.interfaces.RSAPublicKey
-import java.security.spec.ECFieldFp
-import java.security.spec.ECParameterSpec
-import java.security.spec.ECPoint
-import java.security.spec.EllipticCurve
-import java.time.Instant
-import java.util.UUID
-
-import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk._
-import javax.crypto.KeyGenerator
+import com.nimbusds.jose.{ JOSEException, JWSAlgorithm }
+import helloscala.common.types.ObjectId
+import helloscala.common.util.Utils
+import org.apache.commons.lang3.StringUtils
+import org.bouncycastle.util.io.pem.{ PemObject, PemReader, PemWriter }
+
+import java.io._
+import java.math.BigInteger
+import java.security._
+import java.security.interfaces.{ ECPublicKey, RSAPublicKey }
+import java.security.spec._
+import java.time.Instant
 import javax.crypto.SecretKey
-import org.bouncycastle.util.io.pem.PemObject
-import org.bouncycastle.util.io.pem.PemReader
-import org.bouncycastle.util.io.pem.PemWriter
 
 /**
  * @author Yang Jing <a href="mailto:yang.xunjing@qq.com">yangbajing</a>
  * @date 2020-09-20 14:06:18
  */
 object KeyUtils {
-  def writePem(path: Path, typ: String, encoded: Array[Byte]): Unit = {
-    val writer = new PemWriter(Files.newBufferedWriter(path))
-    writer.writeObject(new PemObject(typ, encoded))
-    writer.flush()
-    writer.close()
+  val RSA = "RSA"
+  val EC = "EC"
+
+  def toJwsAlgorithm(algorithm: String): JWSAlgorithm = algorithm match {
+    case KeyUtils.EC  => JWSAlgorithm.ES256
+    case KeyUtils.RSA => JWSAlgorithm.RS256
   }
 
-  def readPemEncoded(path: Path): Array[Byte] = {
-    val reader = new PemReader(Files.newBufferedReader(path))
-    val pem = reader.readPemObject()
-    pem.getContent
+  def isValidAlgorithm(algorithm: String): Boolean = algorithm == EC || algorithm == RSA
+
+  def writePemPublic(`type`: String, encoded: Array[Byte]): String =
+    writePemString(
+      if (StringUtils.isBlank(`type`)) "PUBLIC KEY"
+      else `type` + " PUBLIC KEY",
+      encoded)
+
+  def writePemPrivate(`type`: String, encoded: Array[Byte]): String =
+    writePemString(
+      if (StringUtils.isBlank(`type`)) "PRIVATE KEY"
+      else `type` + " PRIVATE KEY",
+      encoded)
+
+  private def writePemString(`type`: String, encoded: Array[Byte]) = {
+    val writer = new StringWriter
+    try {
+      writePem(writer, `type`, encoded)
+      writer.toString
+    } catch {
+      case e: IOException =>
+        throw new IllegalStateException(e)
+    } finally Utils.closeQuiet(writer)
+  }
+
+  def getPublicKey(pemObject: PemObject, algorithm: String): PublicKey =
+    try {
+      val factory = KeyFactory.getInstance(algorithm)
+      factory.generatePublic(new X509EncodedKeySpec(pemObject.getContent))
+    } catch {
+      case e @ (_: NoSuchAlgorithmException | _: InvalidKeySpecException) =>
+        throw new IllegalStateException(e)
+    }
+
+  def getPrivateKey(pemObject: PemObject, algorithm: String): PrivateKey =
+    try {
+      val factory = KeyFactory.getInstance(algorithm)
+      factory.generatePrivate(new PKCS8EncodedKeySpec(pemObject.getContent))
+    } catch {
+      case e @ (_: NoSuchAlgorithmException | _: InvalidKeySpecException) =>
+        throw new IllegalStateException(e)
+    }
+
+  def readPem(reader: Reader): PemObject = {
+    val pemReader = new PemReader(reader)
+    try pemReader.readPemObject
+    catch {
+      case e: IOException =>
+        throw new IllegalStateException(e)
+    } finally Utils.closeQuiet(pemReader)
+  }
+
+  def writePem(writer: Writer, `type`: String, encoded: Array[Byte]): Unit = {
+    val pemWriter = new PemWriter(writer)
+    try {
+      pemWriter.writeObject(new PemObject(`type`, encoded))
+      pemWriter.flush()
+    } catch {
+      case e: IOException =>
+        throw new IllegalStateException(e)
+    }
+  }
+
+  @throws[IOException]
+  def toBytes(key: PublicKey): Array[Byte] = {
+    val byteOut = new ByteArrayOutputStream
+    val out = new ObjectOutputStream(byteOut)
+    try {
+      out.writeObject(key)
+      out.flush()
+      byteOut.toByteArray
+    } finally Utils.closeQuiet(out)
+  }
+
+  @throws[IOException]
+  def toBytes(key: PrivateKey): Array[Byte] = {
+    val byteOut = new ByteArrayOutputStream
+    val out = new ObjectOutputStream(byteOut)
+    try {
+      out.writeObject(key)
+      out.flush()
+      byteOut.toByteArray
+    } finally Utils.closeQuiet(out)
+  }
+
+  @throws[IOException]
+  def toBytes(key: SecretKey): Array[Byte] = {
+    val byteOut = new ByteArrayOutputStream
+    val out = new ObjectOutputStream(byteOut)
+    try {
+      out.writeObject(key)
+      out.flush()
+      byteOut.toByteArray
+    } finally Utils.closeQuiet(out)
+  }
+
+  @throws[IOException]
+  @throws[ClassNotFoundException]
+  def toPublicKey(bytes: Array[Byte]): PublicKey = {
+    val in = new ObjectInputStream(new ByteArrayInputStream(bytes))
+    try in.readObject.asInstanceOf[PublicKey]
+    finally Utils.closeQuiet(in)
+  }
+
+  @throws[IOException]
+  @throws[ClassNotFoundException]
+  def toPrivateKey(bytes: Array[Byte]): PrivateKey = {
+    val in = new ObjectInputStream(new ByteArrayInputStream(bytes))
+    try in.readObject.asInstanceOf[PrivateKey]
+    finally Utils.closeQuiet(in)
   }
 
   def convert(managedKey: ManagedKey): Option[JWK] = {
-    managedKey.publicKey.flatMap {
+    managedKey.publicKey match {
       case publicKey: RSAPublicKey =>
         val rsaKey = new RSAKey.Builder(publicKey)
           .keyUse(KeyUse.SIGNATURE)
@@ -63,23 +162,20 @@ object KeyUtils {
     }
   }
 
-  def generateSecretKey(): SecretKey = {
-    try KeyGenerator.getInstance("HmacSha256").generateKey
-    catch {
-      case ex: Exception =>
-        throw new IllegalStateException(ex)
-    }
-  }
-
-  def generateRsaKey(): KeyPair = {
+  def generateRsaKey(keysize: Int = 2048): KeyPair = {
     try {
-      val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-      keyPairGenerator.initialize(2048)
+      val keyPairGenerator = KeyPairGenerator.getInstance(KeyUtils.RSA)
+      keyPairGenerator.initialize(keysize)
       keyPairGenerator.generateKeyPair
     } catch {
       case ex: Exception =>
         throw new IllegalStateException(ex)
     }
+  }
+
+  def generateRsaManagedKey(keysize: Int = 2048): ManagedKey = {
+    val keyPair = generateRsaKey(keysize)
+    ManagedKey(ObjectId.getString(), keyPair.getPrivate, keyPair.getPublic)
   }
 
   def generateEcKey(): KeyPair = {
@@ -96,7 +192,7 @@ object KeyUtils {
       new BigInteger("115792089210356248762697446949407573529996955224135760342422259061068512044369"),
       1)
     try {
-      val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+      val keyPairGenerator = KeyPairGenerator.getInstance(KeyUtils.EC)
       keyPairGenerator.initialize(ecParameterSpec)
       keyPairGenerator.generateKeyPair
     } catch {
@@ -105,14 +201,36 @@ object KeyUtils {
     }
   }
 
-  def generateKeys(): Map[String, ManagedKey] = {
+  def generateEcManagedKey(ellipticCurve: EllipticCurve, ecPoint: ECPoint, n: BigInteger, h: Int): ManagedKey = {
+    val ecParameterSpec = new ECParameterSpec(ellipticCurve, ecPoint, n, h)
+    try {
+      val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+      keyPairGenerator.initialize(ecParameterSpec)
+      val keyPair = keyPairGenerator.generateKeyPair
+      ManagedKey(ObjectId.getString(), keyPair.getPrivate, keyPair.getPublic)
+    } catch {
+      case ex: Exception =>
+        throw new IllegalStateException(ex)
+    }
+  }
+
+  @throws[JOSEException]
+  def toManagedKey(jwk: JWK): ManagedKey = {
+    jwk match {
+      case rsaKey: RSAKey =>
+        ManagedKey(jwk.getKeyID, rsaKey.toPrivateKey, rsaKey.toPublicKey)
+      case ecKey: ECKey =>
+        ManagedKey(jwk.getKeyID, ecKey.toPrivateKey, ecKey.toPublicKey)
+      case _ => throw new IllegalStateException(s"Invalid key type that is $jwk, need be RSA or EC.")
+    }
+  }
+
+  def generateKeys(): List[ManagedKey] = {
     val rsaKeyPair = generateRsaKey()
     val rsaManagedKey =
-      ManagedKey("rsa-key", rsaKeyPair.getPrivate, Some(rsaKeyPair.getPublic), Instant.now(), None)
-    val hmacKey: SecretKey = generateSecretKey()
-    val secretManagedKey: ManagedKey = ManagedKey(UUID.randomUUID().toString, hmacKey, None, Instant.now(), None)
+      ManagedKey("rsa-key", rsaKeyPair.getPrivate, rsaKeyPair.getPublic, "", Instant.now(), Instant.MAX)
     val ecKeyPair = generateEcKey()
-    val ecManagedKey = ManagedKey("ec-key", ecKeyPair.getPrivate, Some(ecKeyPair.getPublic), Instant.now(), None)
-    List(rsaManagedKey, secretManagedKey, ecManagedKey).map(mk => mk.id -> mk).toMap
+    val ecManagedKey = ManagedKey("ec-key", ecKeyPair.getPrivate, ecKeyPair.getPublic, "", Instant.now(), Instant.MAX)
+    List(rsaManagedKey, ecManagedKey)
   }
 }

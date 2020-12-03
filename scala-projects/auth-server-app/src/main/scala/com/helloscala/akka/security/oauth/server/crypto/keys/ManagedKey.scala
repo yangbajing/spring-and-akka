@@ -15,15 +15,16 @@ import scala.reflect.ClassTag
  */
 case class ManagedKey(
     id: String,
+    // client_id or openid
     key: Key,
-    publicKey: Option[PublicKey],
-    activatedOn: Instant,
-    deactivatedOn: Option[Instant]) {
-  // TODO add the client_id field ?
+    publicKey: PublicKey,
+    identityId: String = "",
+    activatedOn: Instant = Instant.now(),
+    deactivatedOn: Instant = Instant.MAX) {
 
   def getAlgorithm: String = key.getAlgorithm
   def getKey[T <: Key: ClassTag]: T = key.asInstanceOf[T]
-  def isActive: Boolean = deactivatedOn.isEmpty
-  def isSymmetric: Boolean = classOf[SecretKey].isAssignableFrom(key.getClass)
+  def isActive: Boolean = deactivatedOn.isAfter(Instant.now())
+//  def isSymmetric: Boolean = classOf[SecretKey].isAssignableFrom(key.getClass)
   def isAsymmetric: Boolean = classOf[PrivateKey].isAssignableFrom(key.getClass)
 }

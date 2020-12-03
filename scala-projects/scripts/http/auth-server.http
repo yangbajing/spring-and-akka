@@ -1,0 +1,15 @@
+### ec-client
+POST {{host}}:9000/oauth2/token
+Authorization: Basic ec-client secret
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api.read%20message.read
+
+### message-client
+POST {{host}}:9000/oauth2/token
+Authorization: Basic messaging-client secret
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api.read%20message.read
+
+###

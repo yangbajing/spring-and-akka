@@ -1,9 +1,7 @@
 package me.yangbajing.auth.server
 
 import akka.actor.typed.SpawnProtocol
-import akka.fusion.management.HealthCheckUtils
 import akka.http.scaladsl.Http
-import akka.management.cluster.scaladsl.ClusterHttpManagementRoutes
 import akka.management.scaladsl.AkkaManagement
 import auth.grpc.GreeterServiceHandler
 import com.helloscala.akka.security.oauth.server.OAuth2Route
@@ -21,11 +19,10 @@ import scala.io.StdIn
  */
 object AuthServerApplication extends StrictLogging {
   def main(args: Array[String]): Unit = {
-    val fusionFactory = FusionConsulFactory.fromByConfig()
-    implicit val system = fusionFactory.initActorSystem(SpawnProtocol())
+    implicit val system = FusionConsulFactory.fromByConfig().initActorSystem(SpawnProtocol())
     import system.executionContext
 
-    new AuthorizationServerEntitiesCreator(system).init()
+    AuthorizationServerEntities(system).init()
 
     val cloudConfig = FusionCloudConfigConsul(system)
     val cloudDiscovery = FusionCloudDiscoveryConsul(system)
@@ -39,8 +36,12 @@ object AuthServerApplication extends StrictLogging {
     val bindingFuture = Http().newServerAt(cloudConfig.serverHost, cloudConfig.serverPort).bind(route)
     AkkaManagement(system).start().foreach { uri =>
       val registrationBuilder = cloudDiscovery.configureRegistration(ImmutableRegistration.builder())
-      registrationBuilder.check(
-        ImmutableRegCheck.builder().interval("5.s").http("http://172.17.0.1:8558/health/alive").build())
+      val check = ImmutableRegCheck
+        .builder()
+        .interval("5.s")
+        .http(s"http://${uri.authority.host}:${uri.authority.port}/health/alive")
+        .build()
+      registrationBuilder.check(check)
       cloudDiscovery.register(registrationBuilder.build())
     }
 
@@ -50,7 +51,8 @@ object AuthServerApplication extends StrictLogging {
       cloudDiscovery.register(registrationBuilder.build())
     }
 
-    logger.info(s"Server online at http://localhost:9000/\nPress RETURN to stop...")
+    logger.info(
+      s"Server online at http://${cloudConfig.serverHost}:${cloudConfig.serverPort}/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the serverPort

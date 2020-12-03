@@ -26,7 +26,12 @@
         <appender-ref ref="FILE"/>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="helloscala" level="DEBUG"/>
+    <logger name="fusion" level="DEBUG"/>
+    <logger name="com.helloscala" level="DEBUG"/>
+    <logger name="slick.jdbc.JdbcBackend.statementAndParameter" level="DEBUG"/>
+
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
         <!--        <appender-ref ref="ASYNC"/>-->
     </root>

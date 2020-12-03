@@ -1,8 +1,5 @@
 package com.helloscala.akka.security.oauth.server.authentication
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.util.Timeout
@@ -12,12 +9,14 @@ import com.helloscala.akka.security.oauth.constant.OAuth2ParameterNames
 import com.helloscala.akka.security.oauth.core.{ OAuth2AccessToken, TokenType }
 import com.helloscala.akka.security.oauth.jose.JoseHeader
 import com.helloscala.akka.security.oauth.jwt.Jwt
-import com.helloscala.akka.security.oauth.server.{ OAuth2AuthorizationService, OAuth2Extension }
 import com.helloscala.akka.security.oauth.server.authentication.client.{ RegisteredClient, RegisteredClientRepository }
 import com.helloscala.akka.security.oauth.server.jwt.JwtEncoder
+import com.helloscala.akka.security.oauth.server.{ OAuth2AuthorizationService, OAuth2Extension }
 import com.nimbusds.jose.{ JWSAlgorithm, JWSHeader }
 import com.nimbusds.jwt.JWTClaimsSet
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -81,10 +80,11 @@ class OAuth2ClientCredentialsAuthenticationProviderImpl(system: ActorSystem[_])
 
     val issuedAt = Instant.now()
     val expiresAt = issuedAt.plus(7, ChronoUnit.DAYS).plus(5, ChronoUnit.MINUTES)
-    val algorithm =
-      oauthAuthentication.parameters.get("algorithm").map(JWSAlgorithm.parse).getOrElse(JWSAlgorithm.ES256)
 
-    val jwtHeader = JoseHeader(new JWSHeader.Builder(algorithm).build())
+    val jwtHeader = oauthAuthentication.parameters
+      .get("algorithm")
+      .map(JWSAlgorithm.parse)
+      .map(algorithm => JoseHeader(new JWSHeader.Builder(algorithm).build()))
 
     val jwtClaim = new JWTClaimsSet.Builder()
       .issuer("https://akka-security.helloscala.com")

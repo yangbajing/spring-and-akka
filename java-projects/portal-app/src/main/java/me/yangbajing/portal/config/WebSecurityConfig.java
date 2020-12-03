@@ -53,7 +53,7 @@ public class WebSecurityConfig {
         return http
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/messages/**").permitAll() //.hasAuthority("SCOPE_message.read")
+                        .pathMatchers("/messages/**").hasAuthority("SCOPE_message.read")
                         .pathMatchers("/api/**").hasAuthority("SCOPE_api.read")
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
