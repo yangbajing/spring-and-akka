@@ -12,3 +12,32 @@ spring:
       port: 8500
       discovery:
         prefer-ip-address: on
+    config:
+      overrideNone: true
+  messages:
+    encoding: UTF-8
+  jackson:
+    time-zone: GMT+8
+    locale: zh_CN
+    serialization:
+      WRITE_DURATIONS_AS_TIMESTAMPS: false
+      WRITE_DATES_WITH_ZONE_ID: false
+      WRITE_DATES_AS_TIMESTAMPS: false
+      WRITE_DATE_KEYS_AS_TIMESTAMPS: false
+      WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS: false
+      WRITE_ENUMS_USING_TO_STRING: true
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+      READ_DATE_TIMESTAMPS_AS_NANOSECONDS: false
+      READ_ENUMS_USING_TO_STRING: true
+      USE_BIG_DECIMAL_FOR_FLOATS: true
+mybatis-plus:
+  type-aliases-package: me.yangbajing.user.db.domain
+  type-enums-package: me.yangbajing.common.enums,me.yangbajing.data.common.enums
+  type-handlers-package: me.yangbajing.ext.mybatis.handlers,me.yangbajing.data.ext.mybatis.handler
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    jdbc-type-for-null: null
+    default-enum-type-handler: me.yangbajing.ext.mybatis.extension.handlers.IciyunMybatisEnumTypeHandler
+  global-config:
+    banner: false

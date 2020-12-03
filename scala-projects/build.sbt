@@ -28,16 +28,16 @@ lazy val root = (project in file("."))
 lazy val `gateway-app` =
   _project("gateway-app")
     .dependsOn(`gateway-grpc`, `scala-common`)
-    .settings(Publishing.noPublish: _*)
-    .settings(libraryDependencies ++= Seq(_akkaDiscoveryConsul) ++ _akkaClusters)
+    .settings(skip in publish := true, libraryDependencies ++= Seq(_akkaDiscoveryConsul) ++ _akkaClusters)
 
 lazy val `gateway-grpc` = (project in file("gateway-grpc")).settings(Commons.basicSettings: _*)
 
 lazy val `auth-server-app` =
   _project("auth-server-app")
     .dependsOn(`auth-server-grpc`, `scala-common`, `fusion-consul`, `fusion-grpc`)
-    .settings(Publishing.noPublish: _*)
+    .settings(Packaging.assemblySettings: _*)
     .settings(
+      skip in publish := true,
       libraryDependencies ++= Seq(
           akkaSecurityOauthJose,
           akkaSecurityOauthCore,
@@ -53,7 +53,7 @@ lazy val `auth-server-grpc` = (project in file("auth-server-grpc"))
   .settings(akkaGrpcCodeGeneratorSettings += "server_power_apis")
 
 lazy val `message-app` =
-  _project("message-app").dependsOn(`message-grpc`, `scala-common`).settings(Publishing.noPublish: _*)
+  _project("message-app").dependsOn(`message-grpc`, `scala-common`).settings(skip in publish := true)
 
 lazy val `message-grpc` = (project in file("message-grpc")).settings(Commons.basicSettings: _*)
 

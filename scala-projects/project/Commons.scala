@@ -1,9 +1,8 @@
-import Dependencies._
 import bintray.BintrayKeys._
 import com.typesafe.sbt.SbtNativePackager.autoImport.maintainer
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
 import sbt.Keys._
 import sbt._
+import sbtassembly.AssemblyKeys.assembly
 
 object Commons {
   def basicSettings =
@@ -27,7 +26,6 @@ object Commons {
       shellPrompt := { s =>
         Project.extract(s).currentProject.id + " > "
       },
-      //resolvers += Resolver.bintrayRepo("akka", "snapshots"),
       fork in run := true,
       fork in Test := true,
       parallelExecution in Test := false)
